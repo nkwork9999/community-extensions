@@ -1,10 +1,16 @@
 docs:
   extended_description: |
-    Query Power BI Semantic Models from DuckDB using DAX via XMLA endpoint.
+    Query Power BI Semantic Models from DuckDB using DAX/XMLA.
 
-    Authentication is supported through the Azure CLI using the signed-in user principal. Service principal authentication is not supported at this time.
+    `dax_query` executes DAX and returns results as DuckDB tables. `pbi_tables`, `pbi_columns`, `pbi_measures`, and `pbi_relationships` expose INFO.VIEW metadata for model exploration.
 
-    Please visit the [extension repository](https://github.com/crazy-treyn/pbi_scanner) for more details and examples.
+    The easiest way to get started is Azure CLI auth (`az login`) with `SET pbi_scanner_auth_mode = 'azure_cli'`, but Azure CLI is not required.
+
+    You can also authenticate with DuckDB Azure secrets from the `azure` extension, either by:
+    - setting `Secret=<name>` in the connection string, or
+    - passing `secret_name := '<name>'` as a named parameter.
+
+    Replace workspace and semantic model placeholders with values you can access.
   hello_world: |
     INSTALL pbi_scanner FROM community;
     LOAD pbi_scanner;
@@ -13,13 +19,35 @@ docs:
     SELECT *
     FROM dax_query(
         'Data Source=powerbi://api.powerbi.com/v1.0/myorg/Example%20Workspace;Initial Catalog=example_semantic_model;',
-        'EVALUATE TOPN(500, FactSales)'
+        $$EVALUATE SUMMARIZECOLUMNS(
+            'Date'[Calendar Year],
+            'Date'[Month],
+            'Customer'[Customer],
+            FILTER('Customer', 'Customer'[Customer] <> "Unknown"),
+            "Sales", [Sales],
+            "Sales PY", [Sales PY]
+        )$$
     );
 
+    -- Alternative auth using DuckDB azure secret:
+    -- INSTALL azure; LOAD azure;
+    -- CREATE SECRET pbi_cli (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
+    -- SELECT * FROM dax_query(
+    --   'Data Source=powerbi://api.powerbi.com/v1.0/myorg/Example%20Workspace;Initial Catalog=example_semantic_model;',
+    --   $$EVALUATE SUMMARIZECOLUMNS(
+    --       'Date'[Calendar Year],
+    --       'Date'[Month],
+    --       'Customer'[Customer],
+    --       FILTER('Customer', 'Customer'[Customer] <> "Unknown"),
+    --       "Sales", [Sales],
+    --       "Sales PY", [Sales PY]
+    --   )$$,
+    --   secret_name := 'pbi_cli'
+    -- );
 extension:
   name: pbi_scanner
   description: DuckDB extension for querying Power BI Semantic Models with DAX.
-  version: '0.0.2'
+  version: '0.0.3'
   language: C++
   build: cmake
   license: MIT
@@ -28,4 +56,4 @@ extension:
     - crazy-treyn
 repo:
   github: crazy-treyn/pbi_scanner
-  ref: 29ba6479782786789dc2a941bdb1d2f4fe13874c
+  ref: dcde225628f30353a26d1c60c3dfc951d12ba7a6

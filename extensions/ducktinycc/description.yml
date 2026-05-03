@@ -100,6 +100,12 @@ docs:
       - code is compiled + relocated in-memory (no separate shared-library artifact)
       - registering the same sql_name twice in a session returns false/E_INIT_FAILED (consistent across platforms); use tcc_new_state to reset before re-registering
 
+    Scalar UDF stability:
+      - compile, quick_compile, and codegen_preview accept stability := 'consistent' | 'volatile'
+      - tinycc_bind can stage stability for a later compile; an explicit compile/quick_compile/codegen_preview stability value overrides the staged value
+      - use volatile for RNGs, counters, clocks, allocation, I/O, callbacks, or reads from mutable external memory so DuckDB re-runs the function and avoids constant-folding side effects
+      - generated helper modes set explicit helper stability internally: pure metadata/enum helpers are consistent, while allocation/free/setter/mutable-memory getter helpers are volatile
+
     Embedded runtime (self-contained):
       - libtcc1.a and all TinyCC include headers (stdarg.h, stddef.h, tccdefs.h, etc.) are baked into the extension binary at build time
       - on the first compile or quick_compile call, tcc_ensure_embedded_runtime() extracts them to a content-hash-keyed temp directory (e.g. /tmp/ducktinycc_<hash>/)

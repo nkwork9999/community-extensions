@@ -1,7 +1,7 @@
 extension:
   name: ducklake_cdc
   description: "Stream changes from your DuckLake — durable consumer cursors, single-reader windows, typed DDL events."
-  version: "0.4.0"
+  version: "0.5.0"
   language: C++
   build: cmake
   license: Apache-2.0
@@ -13,4 +13,4 @@ extension:
 
 repo:
   github: "ekkuleivonen/ducklake-cdc-extension"
-  ref: "4c3dae487dcfc926035935bdaa7c6c479ba6e40e"
+  ref: "f5d2e373e9efde1be38f9eaa5fd429ce4c8b4bce"
